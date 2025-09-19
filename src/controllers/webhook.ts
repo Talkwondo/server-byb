@@ -57,14 +57,20 @@ export const handleWebhook = async (req: Request, res: Response) => {
     // For now, route all to BYB handler
     const result = await BybHandler(incomingData);
 
+    // Always return 200 to Meta to acknowledge webhook receipt
+    // Meta only cares that the webhook was received, not business logic success
     if (result) {
-      return res.status(result.statusCode).json(JSON.parse(result.body));
+      console.log("Handler result:", JSON.parse(result.body));
+      return res
+        .status(200)
+        .json({ message: "Webhook processed successfully" });
     } else {
       return res.status(200).json({ message: "Message processed" });
     }
   } catch (error) {
     console.error("Webhook error:", error);
-    return res.status(500).json({ error: "Internal server error" });
+    // Even on error, return 200 to Meta to prevent retries
+    return res.status(200).json({ message: "Webhook received with errors" });
   }
 };
 
