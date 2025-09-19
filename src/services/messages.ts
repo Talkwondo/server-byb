@@ -120,7 +120,6 @@ export const sendAddsToClient = async (
         name: "flow",
         parameters: {
           flow_token: flow.flowToken,
-          mode: "draft",
         },
         ...flowData,
       },

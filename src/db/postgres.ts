@@ -35,8 +35,8 @@ export class PostgresDao {
       customer_phone: data.customerPhone,
       business_phone: "default", // You can make this configurable
       timestamp: timestampValue,
-      order_data: data.order,
-      matched_items: data.matchedItems,
+      order_data: JSON.stringify(data.order),
+      matched_items: JSON.stringify(data.matchedItems),
       name: data.name,
       flow_counter: data.flowCounter,
     });
