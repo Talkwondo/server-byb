@@ -27,11 +27,14 @@ export class PostgresDao {
     // First ensure user exists
     await this.ensureUser(data.customerPhone);
 
+    // Convert Unix timestamp to proper timestamp format
+    const timestampValue = new Date(parseInt(data.timestamp) * 1000);
+
     // Store message
     await db("messages").insert({
       customer_phone: data.customerPhone,
       business_phone: "default", // You can make this configurable
-      timestamp: data.timestamp,
+      timestamp: timestampValue,
       order_data: data.order,
       matched_items: data.matchedItems,
       name: data.name,
