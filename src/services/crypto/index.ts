@@ -1,172 +1,70 @@
-import crypto from "crypto";
+import * as crypto from "crypto";
 
-export interface FlowToken {
-  token: string;
-  expiresAt: Date;
-  metadata: Record<string, any>;
-}
+export const decryptRequest = (body: any, privatePem: string) => {
+  const { encrypted_aes_key, encrypted_flow_data, initial_vector } = body;
 
-export interface EncryptedFlowData {
-  encrypted: string;
-  iv: string;
-  tag: string;
-}
+  // Decrypt the AES key created by the client
+  const decryptedAesKey = crypto.privateDecrypt(
+    {
+      key: crypto.createPrivateKey(privatePem),
+      padding: crypto.constants.RSA_PKCS1_OAEP_PADDING,
+      oaepHash: "sha256",
+    },
+    //@ts-ignore
+    Buffer.from(encrypted_aes_key, "base64")
+  );
 
-export class CryptoService {
-  private algorithm = "aes-256-gcm";
-  private keyLength = 32;
-  private ivLength = 16;
-  private tagLength = 16;
+  // Decrypt the Flow data
+  const flowDataBuffer = Buffer.from(encrypted_flow_data, "base64");
+  const initialVectorBuffer = Buffer.from(initial_vector, "base64");
 
-  constructor(
-    private secretKey: string = process.env.CRYPTO_SECRET_KEY ||
-      "default-secret-key-32-chars-long"
-  ) {
-    if (this.secretKey.length < 32) {
-      throw new Error("Secret key must be at least 32 characters long");
-    }
+  const TAG_LENGTH = 16;
+  const encrypted_flow_data_body = flowDataBuffer.subarray(0, -TAG_LENGTH);
+  const encrypted_flow_data_tag = flowDataBuffer.subarray(-TAG_LENGTH);
+
+  const decipher = crypto.createDecipheriv(
+    "aes-128-gcm",
+    //@ts-ignore
+    decryptedAesKey,
+    initialVectorBuffer
+  );
+  //@ts-ignore
+  decipher.setAuthTag(encrypted_flow_data_tag);
+  //@ts-ignore
+  const decryptedJSONString = Buffer.concat([
+    //@ts-ignore
+    decipher.update(encrypted_flow_data_body),
+    decipher.final(),
+  ]).toString("utf-8");
+
+  return {
+    decryptedBody: JSON.parse(decryptedJSONString),
+    aesKeyBuffer: decryptedAesKey,
+    initialVectorBuffer,
+  };
+};
+
+export const encryptResponse = (
+  response: any,
+  aesKeyBuffer: Buffer,
+  initialVectorBuffer: Buffer
+) => {
+  // Flip the initialization vector
+  const flipped_iv = [];
+  for (const pair of initialVectorBuffer.entries()) {
+    flipped_iv.push(~pair[1]);
   }
-
-  /**
-   * Generate a dynamic flow token for WhatsApp flows
-   */
-  generateFlowToken(metadata: Record<string, any> = {}): FlowToken {
-    const token = crypto.randomBytes(32).toString("hex");
-    const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
-
-    return {
-      token,
-      expiresAt,
-      metadata: {
-        ...metadata,
-        createdAt: new Date().toISOString(),
-        expiresAt: expiresAt.toISOString(),
-      },
-    };
-  }
-
-  /**
-   * Encrypt flow data for secure storage/transmission
-   */
-  encryptFlowData(data: any): EncryptedFlowData {
-    const iv = crypto.randomBytes(this.ivLength);
-    const key = Buffer.from(this.secretKey, "utf8");
-
-    const cipher = crypto.createCipheriv(this.algorithm, key, iv);
-
-    let encrypted = cipher.update(JSON.stringify(data), "utf8", "hex");
-    encrypted += cipher.final("hex");
-
-    return {
-      encrypted,
-      iv: iv.toString("hex"),
-      tag: "",
-    };
-  }
-
-  /**
-   * Decrypt flow data
-   */
-  decryptFlowData(encryptedData: EncryptedFlowData): any {
-    const key = Buffer.from(this.secretKey, "utf8");
-    const iv = Buffer.from(encryptedData.iv, "hex");
-    const tag = Buffer.from(encryptedData.tag, "hex");
-
-    const decipher = crypto.createDecipheriv(this.algorithm, key, iv);
-
-    let decrypted = decipher.update(encryptedData.encrypted, "hex", "utf8");
-    decrypted += decipher.final("utf8");
-
-    return JSON.parse(decrypted);
-  }
-
-  /**
-   * Generate a secure hash for flow validation
-   */
-  hashFlowData(data: any): string {
-    const dataString = JSON.stringify(data);
-    return crypto.createHash("sha256").update(dataString).digest("hex");
-  }
-
-  /**
-   * Create a dynamic flow configuration with encrypted metadata
-   */
-  createDynamicFlow(
-    flowType: string,
-    customerData: Record<string, any> = {}
-  ): {
-    flowToken: string;
-    encryptedMetadata: EncryptedFlowData;
-    hash: string;
-  } {
-    const flowToken = this.generateFlowToken({
-      flowType,
-      customerData,
-    });
-
-    const metadata = {
-      flowType,
-      customerData,
-      timestamp: Date.now(),
-      token: flowToken.token,
-    };
-
-    const encryptedMetadata = this.encryptFlowData(metadata);
-    const hash = this.hashFlowData(metadata);
-
-    return {
-      flowToken: flowToken.token,
-      encryptedMetadata,
-      hash,
-    };
-  }
-
-  /**
-   * Validate a flow token and extract metadata
-   */
-  validateFlowToken(
-    token: string,
-    encryptedMetadata: EncryptedFlowData
-  ): {
-    valid: boolean;
-    metadata?: any;
-    error?: string;
-  } {
-    try {
-      const metadata = this.decryptFlowData(encryptedMetadata);
-
-      if (metadata.token !== token) {
-        return { valid: false, error: "Token mismatch" };
-      }
-
-      if (
-        new Date(metadata.timestamp) <
-        new Date(Date.now() - 24 * 60 * 60 * 1000)
-      ) {
-        return { valid: false, error: "Token expired" };
-      }
-
-      return { valid: true, metadata };
-    } catch (error) {
-      return { valid: false, error: "Invalid token" };
-    }
-  }
-
-  /**
-   * Generate a unique session ID for customer flows
-   */
-  generateSessionId(customerPhone: string): string {
-    const timestamp = Date.now();
-    const randomBytes = crypto.randomBytes(8).toString("hex");
-    const hash = crypto
-      .createHash("sha256")
-      .update(`${customerPhone}-${timestamp}-${randomBytes}`)
-      .digest("hex")
-      .substring(0, 16);
-
-    return `${hash}-${timestamp}`;
-  }
-}
-
-// Export singleton instance
-export const cryptoService = new CryptoService();
+  // Encrypt the response data
+  const cipher = crypto.createCipheriv(
+    "aes-128-gcm",
+    //@ts-ignore
+    aesKeyBuffer,
+    Buffer.from(flipped_iv)
+  );
+  //@ts-ignore
+  return Buffer.concat([
+    cipher.update(JSON.stringify(response), "utf-8"),
+    cipher.final(),
+    cipher.getAuthTag(),
+  ]).toString("base64");
+};

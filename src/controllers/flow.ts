@@ -1,4 +1,5 @@
 import { Request, Response } from "express";
+import { decryptRequest, encryptResponse } from "../services/crypto";
 
 // Helper function for street search (you'll need to implement this)
 async function searchStreetInCity(city: string, street: string) {
@@ -16,11 +17,15 @@ async function searchStreetInCity(city: string, street: string) {
 
 export const handleFlow = async (req: Request, res: Response) => {
   try {
-    const body = req.body;
-    const { screen, data, version, action } = body;
-
+    const body = JSON.parse(req.body);
+    const { decryptedBody, aesKeyBuffer, initialVectorBuffer } = decryptRequest(
+      body,
+      process.env.PRIVATE_KEY!
+    );
     console.log("Flow request:", JSON.stringify(body, null, 2));
+    const { screen, data, version, action } = decryptedBody;
 
+    console.log("decryptedBody", decryptedBody);
     let responseBody = null;
 
     switch (action) {
@@ -145,21 +150,23 @@ export const handleFlow = async (req: Request, res: Response) => {
         };
         break;
       }
-
-      default: {
-        console.log("Unknown action:", action);
-        responseBody = {
-          version,
-          screen,
-          data: {},
+      default:
+        return {
+          statusCode: 200,
+          body: encryptResponse(
+            responseBody,
+            aesKeyBuffer,
+            initialVectorBuffer
+          ),
         };
-        break;
-      }
     }
 
     console.log("Flow response:", JSON.stringify(responseBody, null, 2));
 
-    return res.status(200).json(responseBody);
+    return {
+      statusCode: 200,
+      body: encryptResponse(responseBody, aesKeyBuffer, initialVectorBuffer),
+    };
   } catch (error) {
     console.error("Flow error:", error);
     res.status(500).json({
