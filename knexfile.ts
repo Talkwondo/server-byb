@@ -5,10 +5,10 @@ const config: { [key: string]: Knex.Config } = {
     client: "postgresql",
     connection: {
       host: process.env.DB_HOST || "localhost",
-      port: parseInt(process.env.DB_PORT || "5432"),
+      port: parseInt(process.env.DB_PORT || "5433"),
       database: process.env.DB_NAME || "byb_bot",
       user: process.env.DB_USER || "postgres",
-      password: process.env.DB_PASSWORD || "password",
+      password: process.env.DB_PASSWORD || "T!t135642",
     },
     pool: {
       min: 2,
