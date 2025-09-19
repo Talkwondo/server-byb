@@ -148,6 +148,8 @@ export const handleFlow = async (req: Request, res: Response) => {
             status: "active",
           },
         };
+        return res.status(200).json(responseBody);
+
         break;
       }
       default: {
