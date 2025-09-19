@@ -148,8 +148,6 @@ export const handleFlow = async (req: Request, res: Response) => {
             status: "active",
           },
         };
-        return res.status(200).json(responseBody);
-
         break;
       }
       default: {
@@ -160,10 +158,14 @@ export const handleFlow = async (req: Request, res: Response) => {
 
     console.log("Flow response:", JSON.stringify(responseBody, null, 2));
 
-    return {
-      statusCode: 200,
-      body: encryptResponse(responseBody, aesKeyBuffer, initialVectorBuffer),
-    };
+    const encryptedResponse = encryptResponse(
+      responseBody,
+      aesKeyBuffer,
+      initialVectorBuffer
+    );
+    console.log("Encrypted response (Base64):", encryptedResponse);
+
+    return res.status(200).send(encryptedResponse);
   } catch (error) {
     console.error("Flow error:", error);
     res.status(500).json({
