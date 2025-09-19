@@ -159,12 +159,13 @@ export const BybHandler = async ({
       const firstMatchId = matchedItems[0].product_retailer_id;
 
       await sendAddsToClient(
-        businessPhone,
-        customerPhone,
-        timeStamp,
-        phoneId,
-        nameProduct,
-        flowDataMap[firstMatchId] || flowDataMap.default
+        businessPhone, // from
+        customerPhone, // to
+        timeStamp, // timestamp
+        phoneId, // phoneId
+        nameProduct, // name
+        flowDataMap[firstMatchId] || flowDataMap.default, // flowActions
+        undefined // link (optional)
       );
     } else {
       await sendSummaryOrderToClient(

@@ -1,5 +1,67 @@
 import { IncomingData } from "../types";
 
+interface WhatsappFlow {
+  messaging_product: string;
+  recipient_type: string;
+  to: string;
+  type: string;
+  template: {
+    name: string;
+    language: {
+      code: string;
+    };
+    components: Array<{
+      type: string;
+      parameters?: Array<{
+        type: string;
+        image?: {
+          link: string;
+        };
+        text?: string;
+        action?: {
+          flow_token: string;
+          flow_action_data?: any;
+        };
+      }>;
+      sub_type?: string;
+      index?: string;
+    }>;
+  };
+}
+
+const sendMessage = async (
+  data: WhatsappFlow,
+  from: string,
+  to: string,
+  timestamp: string,
+  phoneId: string
+) => {
+  try {
+    const response = await fetch(
+      `https://graph.facebook.com/v21.0/${phoneId}/messages`,
+      {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${process.env.WHATSAPP_TOKEN}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(data),
+      }
+    );
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    const result = await response.json();
+    console.log("Message sent successfully:", result);
+    return result;
+  } catch (error) {
+    console.error("Error sending message:", error);
+    throw error;
+  }
+};
+
 export const sendTextToClient = async (
   businessPhone: string,
   customerPhone: string,
@@ -90,65 +152,82 @@ export const sendMultiMessageCatalog = async (
 };
 
 export const sendAddsToClient = async (
-  businessPhone: string,
-  customerPhone: string,
-  timeStamp: string,
+  from: string,
+  to: string,
+  timestamp: string,
   phoneId: string,
-  productName: string,
-  flowData: any
+  name: string,
+  flowActions: any,
+  link?: string
 ) => {
-  // Import dynamic flow service
-  const { dynamicFlowService } = await import("./flow");
-
-  // Create dynamic flow for this product
-  const flow = await dynamicFlowService.createFlow(
-    customerPhone,
-    flowData.flow_type || "default",
-    { productName, ...flowData }
-  );
-
-  const messageData = {
+  const data = {
     messaging_product: "whatsapp",
-    to: customerPhone,
-    type: "interactive",
-    interactive: {
-      type: "flow",
-      body: {
-        text: `איך תרצו את ה${productName}?`,
+    recipient_type: "individual",
+    to,
+    type: "template",
+    template: {
+      name: "add_ons",
+      language: {
+        code: "he",
       },
-      action: {
-        name: "flow",
-        parameters: {
-          flow_token: flow.flowToken,
+      components: [
+        {
+          type: "header",
+          parameters: [
+            {
+              type: "image",
+              image: {
+                link: "https://d25t2285lxl5rf.cloudfront.net/images/dishes/8c8e58ae-a5e5-45fd-b283-429b1eec107d.jpg",
+              },
+            },
+          ],
         },
-        ...flowData,
-      },
+        {
+          type: "body",
+          parameters: [
+            {
+              type: "text",
+              text: name,
+            },
+          ],
+        },
+        {
+          type: "button",
+          sub_type: "flow",
+          index: "0",
+          parameters: [
+            {
+              // old way
+              type: "action",
+              action: {
+                flow_token: "kmknrnje",
+                flow_action_data: flowActions,
+              },
+            },
+            // { // with loading data on first screen
+            //   type: "action",
+            //   action: {
+            //     flow_token: "kmknrnje",
+            //   },
+            // },
+          ],
+        },
+      ],
     },
   };
 
   try {
-    const response = await fetch(
-      `https://graph.facebook.com/v21.0/${phoneId}/messages`,
-      {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${process.env.WHATSAPP_TOKEN}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(messageData),
-      }
+    const response = await sendMessage(
+      data as WhatsappFlow,
+      from,
+      to,
+      timestamp,
+      phoneId
     );
-
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-
-    const result = await response.json();
-    console.log("Flow message sent successfully:", result);
-    return result;
-  } catch (error) {
-    console.error("Error sending flow message:", error);
-    throw error;
+    return response;
+  } catch (err) {
+    console.error("Error sending adds client message:", err);
+    return null;
   }
 };
 
