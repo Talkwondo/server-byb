@@ -17,7 +17,7 @@ async function searchStreetInCity(city: string, street: string) {
 
 export const handleFlow = async (req: Request, res: Response) => {
   try {
-    const body = JSON.parse(req.body);
+    const body = req.body;
     const { decryptedBody, aesKeyBuffer, initialVectorBuffer } = decryptRequest(
       body,
       process.env.PRIVATE_KEY!
@@ -150,15 +150,10 @@ export const handleFlow = async (req: Request, res: Response) => {
         };
         break;
       }
-      default:
-        return {
-          statusCode: 200,
-          body: encryptResponse(
-            responseBody,
-            aesKeyBuffer,
-            initialVectorBuffer
-          ),
-        };
+      default: {
+        console.log("default");
+        break;
+      }
     }
 
     console.log("Flow response:", JSON.stringify(responseBody, null, 2));
