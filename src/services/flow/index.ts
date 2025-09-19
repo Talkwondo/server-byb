@@ -52,7 +52,7 @@ export class DynamicFlowService {
 
     // Store flow in database
     await db("dynamic_flows").insert({
-      id: flow.id,
+      flow_id: flow.id,
       flow_token: flow.flowToken,
       customer_phone: flow.customerPhone,
       flow_type: flow.flowType,
