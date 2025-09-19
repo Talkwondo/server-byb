@@ -16,7 +16,7 @@ export const sendTextToClient = async (
 
   try {
     const response = await fetch(
-      `https://graph.facebook.com/v18.0/${phoneId}/messages`,
+      `https://graph.facebook.com/v21.0/${phoneId}/messages`,
       {
         method: "POST",
         headers: {
@@ -65,7 +65,7 @@ export const sendMultiMessageCatalog = async (
 
   try {
     const response = await fetch(
-      `https://graph.facebook.com/v18.0/${phoneId}/messages`,
+      `https://graph.facebook.com/v21.0/${phoneId}/messages`,
       {
         method: "POST",
         headers: {
@@ -128,7 +128,7 @@ export const sendAddsToClient = async (
 
   try {
     const response = await fetch(
-      `https://graph.facebook.com/v18.0/${phoneId}/messages`,
+      `https://graph.facebook.com/v21.0/${phoneId}/messages`,
       {
         method: "POST",
         headers: {
@@ -153,26 +153,47 @@ export const sendAddsToClient = async (
 };
 
 export const sendSummaryOrderToClient = async (
-  businessPhone: string,
-  customerPhone: string,
-  timeStamp: string,
+  from: string,
+  to: string,
+  timestamp: string,
   phoneId: string,
-  summaryData: any[]
+  flowActions: any,
+  delivery = false
 ) => {
-  const messageData = {
+  const data = {
+    recipient_type: "individual",
     messaging_product: "whatsapp",
-    to: customerPhone,
+    to,
     type: "interactive",
     interactive: {
       type: "flow",
+      header: {
+        type: "text",
+        text: "סיכום הזמנה",
+      },
       body: {
-        text: "סיכום הזמנתכם:",
+        text: "אנא סכמו את הזמנכם",
+      },
+      footer: {
+        text: delivery ? "הכינו פרטי משלוח" : "הכינו פרטי איסוף",
       },
       action: {
         name: "flow",
         parameters: {
-          flow_token: "summary_flow_token",
-          mode: "draft",
+          flow_message_version: "3",
+          flow_token: "AQAAAAACS5FpgQ_cAAAAAD0QI3s.",
+          flow_id: "2525252361195121",
+          flow_cta: "סיכום הזמנה",
+          flow_action: "navigate",
+          flow_action_payload: {
+            screen: "DELIVERY",
+            data: {
+              ...flowActions,
+              delivery,
+              min_date: "2025-07-10",
+              max_date: "2025-07-12",
+            },
+          },
         },
       },
     },
@@ -187,7 +208,7 @@ export const sendSummaryOrderToClient = async (
           Authorization: `Bearer ${process.env.WHATSAPP_TOKEN}`,
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(messageData),
+        body: JSON.stringify(data),
       }
     );
 
@@ -222,7 +243,7 @@ export const sendSuccessToClient = async (
 
   try {
     const response = await fetch(
-      `https://graph.facebook.com/v18.0/${phoneId}/messages`,
+      `https://graph.facebook.com/v21.0/${phoneId}/messages`,
       {
         method: "POST",
         headers: {
@@ -266,7 +287,7 @@ export const sendLinkToPay = async (
 
   try {
     const response = await fetch(
-      `https://graph.facebook.com/v18.0/${phoneId}/messages`,
+      `https://graph.facebook.com/v21.0/${phoneId}/messages`,
       {
         method: "POST",
         headers: {
