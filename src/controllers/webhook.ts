@@ -22,9 +22,24 @@ export const handleWebhook = async (req: Request, res: Response) => {
       return res.status(400).json({ error: "No value found in changes" });
     }
 
+    // Filter out old messages (> 12 minutes) to prevent duplicate processing
+    // Meta retries failed webhooks with the same timestamp
+    if (value.messages) {
+      const twelveMinutesAgo = (Date.now() - 1000 * 60 * 12) / 1000; // Convert to seconds
+      value.messages = value.messages.filter(
+        (message: any) => message.timestamp > twelveMinutesAgo
+      );
+
+      console.log(`Filtered messages. Remaining: ${value.messages.length}`);
+    }
+
     const messages = value.messages?.[0];
     if (!messages) {
-      return res.status(200).json({ message: "No messages to process" });
+      return res
+        .status(200)
+        .json({
+          message: "No messages to process (filtered out old messages)",
+        });
     }
 
     // Extract message data
