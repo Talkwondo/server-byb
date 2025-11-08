@@ -7,8 +7,8 @@ async function searchStreetInCity(city: string, street: string) {
   if (street && street.length > 2) {
     return [
       {
-        id: `${city}-${street}`,
-        title: `${street}, ${city}`,
+        id: `1`,
+        title: `fda`,
       },
     ];
   }

@@ -1,6 +1,7 @@
 import { Request, Response } from "express";
 import { IncomingData } from "../types";
 import { BybHandler } from "../clients/byb";
+import { KeshetHandler } from "../clients/keshet";
 
 export const handleWebhook = async (req: Request, res: Response) => {
   try {
@@ -35,11 +36,9 @@ export const handleWebhook = async (req: Request, res: Response) => {
 
     const messages = value.messages?.[0];
     if (!messages) {
-      return res
-        .status(200)
-        .json({
-          message: "No messages to process (filtered out old messages)",
-        });
+      return res.status(200).json({
+        message: "No messages to process (filtered out old messages)",
+      });
     }
 
     // Extract message data
@@ -70,7 +69,8 @@ export const handleWebhook = async (req: Request, res: Response) => {
 
     // Route to appropriate client handler based on business phone or other criteria
     // For now, route all to BYB handler
-    const result = await BybHandler(incomingData);
+    // const result = await BybHandler(incomingData);
+    const result = await KeshetHandler(incomingData);
 
     // Always return 200 to Meta to acknowledge webhook receipt
     // Meta only cares that the webhook was received, not business logic success

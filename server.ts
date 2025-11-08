@@ -2,6 +2,7 @@ import express from "express";
 import { handleWebhook, verifyWebhook } from "./src/controllers/webhook";
 import { handleFlow } from "./src/controllers/flow";
 import dotenv from "dotenv";
+import { handleVerifyPayment } from "./src/services/payment";
 
 dotenv.config();
 
@@ -21,6 +22,7 @@ app.post("/flow", handleFlow);
 // WhatsApp webhook endpoints
 app.get("/webhook", verifyWebhook);
 app.post("/webhook", handleWebhook);
+app.post("/verify", handleVerifyPayment);
 
 app.listen(port, () => {
   console.log(`WhatsApp Bot Server running at http://localhost:${port}`);

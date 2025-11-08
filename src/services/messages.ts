@@ -1,4 +1,5 @@
-import { IncomingData } from "../types";
+import { IncomingData, Order } from "../types";
+import moment from "moment";
 
 interface WhatsappFlow {
   messaging_product: string;
@@ -231,6 +232,45 @@ export const sendAddsToClient = async (
   }
 };
 
+export const sendSummaryOrderWithDetiales = async (
+  order: string,
+  to: string
+) => {
+  const today = moment().format("YYYY-MM-DD");
+
+  const data = {
+    recipient_type: "individual",
+    messaging_product: "whatsapp",
+    to,
+    type: "interactive",
+    interactive: {
+      type: "flow",
+      header: {
+        type: "text",
+        text: "סיכום הזמנה",
+      },
+      body: {
+        text: "אנא סכמו את הזמנכם",
+      },
+      footer: {
+        text: "הכינו פרטי מזמין",
+      },
+      action: {
+        name: "flow",
+        parameters: {
+          flow_action_payload: {
+            screen: "DELIVERY",
+            data: {
+              min_date: today,
+              order,
+            },
+          },
+        },
+      },
+    },
+  };
+};
+
 export const sendSummaryOrderToClient = async (
   from: string,
   to: string,
@@ -388,4 +428,72 @@ export const sendLinkToPay = async (
     console.error("Error sending payment link:", error);
     throw error;
   }
+};
+
+// TODO: Define this schema/config as a TypeScript constant or interface if used as config/data.
+// Example (fixed JSON to valid TS and moved to export):
+
+export const orderSummaryScreenConfig = {
+  screens: [
+    {
+      data: {},
+      id: "RECOMMEND",
+      layout: {
+        children: [
+          {
+            children: [
+              { text: "להלן הזמנתך", type: "TextSubheading" },
+              { text: "מנקה 8 שעות", type: "TextBody" },
+              {
+                "input-type": "text",
+                label: "פרטי חברת המזמין",
+                name: "___193abd",
+                required: true,
+                type: "TextInput",
+              },
+              {
+                "input-type": "text",
+                label: "ח.פ",
+                name: "_8c7f65",
+                required: true,
+                type: "TextInput",
+              },
+              {
+                label: "תאריך מתבקש",
+                name: "__f726e9",
+                required: true,
+                type: "DatePicker",
+                "helper-text": "בחר תאריך",
+              },
+              {
+                type: "TextArea",
+                label: "הערות",
+                required: false,
+                name: "_0d3fe3",
+              },
+              {
+                label: "שלח הזמנה",
+                "on-click-action": {
+                  name: "complete",
+                  payload: {
+                    screen_0____0: "${form.___193abd}",
+                    screen_0__1: "${form._8c7f65}",
+                    screen_0___2: "${form.__f726e9}",
+                    screen_0__3: "${form._0d3fe3}",
+                  },
+                },
+                type: "Footer",
+              },
+            ],
+            name: "flow_path",
+            type: "Form",
+          },
+        ],
+        type: "SingleColumnLayout",
+      },
+      terminal: true,
+      title: "סיכום הזמנה",
+    },
+  ],
+  version: "7.2",
 };
