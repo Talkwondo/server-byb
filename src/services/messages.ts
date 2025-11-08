@@ -259,7 +259,7 @@ export const sendSummaryOrderWithDetiales = async (
         name: "flow",
         parameters: {
           flow_action_payload: {
-            screen: "DELIVERY",
+            screen: "ORDER",
             data: {
               min_date: today,
               order,
