@@ -234,7 +234,8 @@ export const sendAddsToClient = async (
 
 export const sendSummaryOrderWithDetiales = async (
   order: string,
-  to: string
+  to: string,
+  phoneId: string
 ) => {
   const today = moment().format("YYYY-MM-DD");
 
@@ -269,6 +270,31 @@ export const sendSummaryOrderWithDetiales = async (
       },
     },
   };
+
+  try {
+    const response = await fetch(
+      `https://graph.facebook.com/v18.0/${phoneId}/messages`,
+      {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${process.env.WHATSAPP_TOKEN}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(data),
+      }
+    );
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    const result = await response.json();
+    console.log("Summary message sent successfully:", result);
+    return result;
+  } catch (error) {
+    console.error("Error sending summary message:", error);
+    throw error;
+  }
 };
 
 export const sendSummaryOrderToClient = async (

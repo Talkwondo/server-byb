@@ -33,7 +33,11 @@ export const KeshetHandler = async ({
         return `${product.name} ${product.quantity} שעות`;
       }
     );
-    await sendSummaryOrderWithDetiales(orderParsed.join("\n"), customerPhone);
+    await sendSummaryOrderWithDetiales(
+      orderParsed.join("\n"),
+      customerPhone,
+      phoneId
+    );
     const order = message.order;
     await db.storeMessage({
       customerPhone,
