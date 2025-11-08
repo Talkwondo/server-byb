@@ -34,8 +34,7 @@ export const KeshetHandler = async ({
       }
     );
     await sendSummaryOrderWithDetiales(
-      //   orderParsed.join("\n"),
-      "TEST",
+      orderParsed.join("\n"),
       customerPhone,
       phoneId
     );
