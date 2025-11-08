@@ -243,34 +243,42 @@ export const sendSummaryOrderWithDetiales = async (
     recipient_type: "individual",
     messaging_product: "whatsapp",
     to,
-    type: "interactive",
-    interactive: {
-      type: "flow",
-      header: {
-        type: "text",
-        text: "סיכום הזמנה",
+    type: "template",
+
+    template: {
+      name: "summary",
+      language: {
+        code: "he",
       },
-      body: {
-        text: "אנא סכמו את הזמנכם",
-      },
-      footer: {
-        text: "הכינו פרטי מזמין",
-      },
-      action: {
-        name: "flow",
-        parameters: {
-          flow_action_payload: {
-            screen: "ORDER",
-            data: {
-              min_date: today,
-              order,
+      components: [
+        {
+          type: "button",
+          sub_type: "flow",
+          index: "0",
+          parameters: [
+            {
+              // old way
+              type: "action",
+              action: {
+                flow_token: "kmknrnjefsfew",
+                flow_action_data: {
+                  min_date: today,
+                  order,
+                },
+              },
             },
-          },
+            // { // with loading data on first screen
+            //   type: "action",
+            //   action: {
+            //     flow_token: "kmknrnje",
+            //   },
+            // },
+          ],
         },
-      },
+      ],
     },
   };
-
+  console.log("DATA", data);
   try {
     const response = await fetch(
       `https://graph.facebook.com/v18.0/${phoneId}/messages`,
