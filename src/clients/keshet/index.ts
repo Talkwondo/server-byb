@@ -2,6 +2,7 @@ import { IncomingData, ProductItem, typeOrder } from "../../types";
 import {
   sendLinkToPay,
   sendSummaryOrderWithDetiales,
+  sendTextToClient,
 } from "../../services/messages";
 import { PostgresDao } from "../../db/postgres";
 import { generatePaymentLink, processPayment } from "../../services/payment";
@@ -30,9 +31,26 @@ export const KeshetHandler = async ({
   if (message?.type === typeOrder.ORDER) {
     const orderParsed = message.order.product_items.map(
       (product: ProductItem) => {
-        return `${product.name} ${product.quantity} שעות`;
+        return `${product.title} ${product.quantity} שעות`;
       }
     );
+    let cancelOrder = false;
+    for (const product of message.order.product_items) {
+      const quantity = product.quantity;
+
+      if (quantity < 8) {
+        await sendTextToClient(
+          "",
+          customerPhone,
+          "",
+          phoneId,
+          "ההזמנה חייבת להכיל 8 שעות מכל עובד במינימום"
+        );
+        cancelOrder = true;
+        break;
+      }
+    }
+    if (cancelOrder) return;
     await sendSummaryOrderWithDetiales(
       orderParsed.join("\n"),
       customerPhone,
