@@ -72,7 +72,7 @@ export const KeshetHandler = async ({
       }),
     };
   }
-
+  console.log("type", message?.type, message?.interactive?.type, message?.interactive)
   if (
     message?.type === "interactive" &&
     message.interactive?.type === "nfm_reply"
