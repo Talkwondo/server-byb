@@ -58,7 +58,7 @@ const extractGroupTokenFragment = (redirectURL: string) => {
     return {
       groupId,
       token,
-      fragment: `GroupId=${groupId}&Token=${token}`,
+      fragment: `${groupId}&Token=${token}`,
     };
   } catch (err) {
     const tokenMatch = redirectURL.match(/Token=([^&]+)/i);
