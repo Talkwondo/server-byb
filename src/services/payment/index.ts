@@ -7,7 +7,7 @@ const PAYMENT_PROVIDER_URL =
   "https://testicredit.rivhit.co.il/API/PaymentPageRequest.svc/GetUrl";
 const PAYMENT_GROUP_TOKEN =
   process.env.PAYMENT_GROUP_TOKEN ||
-  "6ff3d7c6-001c-48ea-a6c8-9482791c1d60";
+  "bb8a47ab-42e0-4b7f-ba08-72d55f2d9e41";
 const PAYMENT_IPN_URL =
   process.env.PAYMENT_IPN_URL ||
   "https://payment.horim-elcharizi.co.il/verify";
@@ -88,17 +88,13 @@ export const generatePaymentLink = async (
 
     console.log("data sale", dataSale)
 
-    const controller = new AbortController();
-
     const response = await fetch(PAYMENT_PROVIDER_URL, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
       },
       body: JSON.stringify(dataSale),
-      signal: controller.signal,
     });
-
 
     if (!response.ok) {
       throw new Error(
