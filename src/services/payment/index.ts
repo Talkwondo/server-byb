@@ -48,11 +48,39 @@ const buildPaymentItems = (order: Order): PaymentItem[] => {
   }));
 };
 
+const extractGroupTokenFragment = (redirectURL: string) => {
+  try {
+    const url = new URL(redirectURL);
+    const token = url.searchParams.get("Token");
+    const groupId = url.searchParams.get("GroupId") || PAYMENT_GROUP_TOKEN;
+    if (!token) return null;
+
+    return {
+      groupId,
+      token,
+      fragment: `GroupId=${groupId}&Token=${token}`,
+    };
+  } catch (err) {
+    const tokenMatch = redirectURL.match(/Token=([^&]+)/i);
+    const groupMatch = redirectURL.match(/GroupId=([^&]+)/i);
+    const token = tokenMatch?.[1];
+    const groupId = groupMatch?.[1] || PAYMENT_GROUP_TOKEN;
+    if (!token) return null;
+
+    return {
+      groupId,
+      token,
+      fragment: `GroupId=${groupId}&Token=${token}`,
+    };
+  }
+};
+
 export interface PaymentResult {
   success: boolean;
   orderId: string;
   paymentRequired: boolean;
   paymentLink?: string;
+  paymentRedirectUrl?: string;
   error?: string;
 }
 
@@ -105,17 +133,20 @@ export const generatePaymentLink = async (
     const responseData = await response.json();
     const statusToString = responseData?.Status?.toString?.() ?? "";
     const redirectURL = responseData?.URL as string | undefined;
+    const fragment =
+      (redirectURL && extractGroupTokenFragment(redirectURL)?.fragment) ||
+      redirectURL;
 
     if (!redirectURL) {
       throw new Error(
         `Payment provider did not return a redirect URL (status: ${statusToString})`
       );
     }
-
     return {
       success: true,
       orderId,
-      paymentLink: redirectURL,
+      paymentLink: fragment,
+      paymentRedirectUrl: redirectURL,
       paymentRequired: true,
     };
   } catch (error) {
