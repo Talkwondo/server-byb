@@ -9,6 +9,7 @@ dotenv.config();
 const app = express();
 const port = process.env.PORT || 3980;
 
+app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 
 // Health check endpoint

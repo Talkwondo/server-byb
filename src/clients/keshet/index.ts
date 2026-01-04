@@ -104,7 +104,7 @@ export const KeshetHandler = async ({
         getOrder.order,
         customerPhone
       );
-
+      console.log("link", getPaymentLink.paymentLink)
       if (getPaymentLink.success && getPaymentLink.paymentLink) {
         const link = getPaymentLink.paymentLink.split("/").slice(-2).join("/");
         await sendLinkToPay(
