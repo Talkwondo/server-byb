@@ -106,9 +106,10 @@ export const KeshetHandler = async ({
       );
       console.log("link", getPaymentLink.paymentLink)
       if (getPaymentLink.success && getPaymentLink.paymentLink) {
+        const link = `https://testicredit.rivhit.co.il/payment/PaymentItems.aspx?GroupId=${getPaymentLink.paymentLink}`;
         await sendLinkToPay(
           getPaymentLink.orderId,
-          getPaymentLink.paymentLink,
+          link,
           customerPhone,
           businessPhone,
           customerName,

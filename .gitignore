@@ -6,3 +6,5 @@ npm-debug.log
 .DS_Store
 .npm-cache/
 private_key.pem
+*.js
+*.js.map
