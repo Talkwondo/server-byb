@@ -70,6 +70,7 @@ export const handleWebhook = async (req: Request, res: Response) => {
     // Route to appropriate client handler based on business phone or other criteria
     // For now, route all to BYB handler
     // const result = await BybHandler(incomingData);
+    console.log("KESHET_HANDLER")
     const result = await KeshetHandler(incomingData);
 
     // Always return 200 to Meta to acknowledge webhook receipt
