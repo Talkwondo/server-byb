@@ -79,16 +79,16 @@ export const generatePaymentLink = async (
       CustomerFirstName: firstName,
       CustomerLastName: lastName,
       Items: items,
+      Currency: 1,
       IPNURL: PAYMENT_IPN_URL,
+      EmailAddress: "tal@tkd.co.il",
       FailRedirectURL: PAYMENT_FAIL_REDIRECT_URL,
       RedirectURL: PAYMENT_SUCCESS_REDIRECT_URL,
     };
 
+    console.log("data sale", dataSale)
+
     const controller = new AbortController();
-    const timeoutId = setTimeout(
-      () => controller.abort(),
-      PAYMENT_TIMEOUT_MS
-    );
 
     const response = await fetch(PAYMENT_PROVIDER_URL, {
       method: "POST",
@@ -99,7 +99,6 @@ export const generatePaymentLink = async (
       signal: controller.signal,
     });
 
-    clearTimeout(timeoutId);
 
     if (!response.ok) {
       throw new Error(
